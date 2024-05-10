@@ -17,8 +17,11 @@
 
 unsigned char CURR_X;
 unsigned char CURR_Y;
-float STEP = 5;
+float STEP = 2;
 unsigned int FEED_RATE;
+
+const int BUFFER_SIZE = 256;
+char line_buffer[BUFFER_SIZE];
 
 void setX(unsigned char x);
 void setY(unsigned char y);
@@ -43,18 +46,19 @@ void setup()
 {
 	initDS1803();
 	G00(0, 0);
+	Serial.begin(9600);
+	Serial.setTimeout(1000);
+	Serial.println("READY");
 }
 
 void loop()
 {
-	G01(0, 0);
-	delay(500);
-	G01(255, 255);
-	delay(500);
-	G01(0, 255);
-	delay(500);
-	G01(255, 0);
-	delay(500);
+	if (Serial.available() > 0) {
+		int n = Serial.readBytesUntil('\n', line_buffer, BUFFER_SIZE);
+		Serial.write("OK: ");
+		Serial.write(line_buffer, n);
+		Serial.write('\n');
+	}
 }
 
 void setX(unsigned char x)
