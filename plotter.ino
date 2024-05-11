@@ -13,7 +13,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <DS1803.h>
-#include <GCodeParser.h>
+#include "gcode.h"
 #include <math.h>
 
 unsigned char CURR_X;
@@ -21,7 +21,8 @@ unsigned char CURR_Y;
 float STEP = 2;
 unsigned int FEED_RATE;
 
-GCodeParser gcode = GCodeParser();
+char line_buffer[256];
+GCode gcode(line_buffer, 256);
 
 void setX(unsigned char x);
 void setY(unsigned char y);
@@ -56,9 +57,9 @@ void setup()
 void loop()
 {
 	if (Serial.available() > 0) {
-		if (gcode.AddCharToLine(Serial.read())) {
-			gcode.ParseLine();
+		if (gcode.addChar(Serial.read())) {
 			parse();
+			gcode.reset();
 		}
 	}
 }
@@ -151,25 +152,25 @@ float angle(unsigned char x1, unsigned char y1,
 
 void parse()
 {
-	if (!gcode.HasWord('G')) {
+	if (!gcode.exists('G')) {
 		Serial.println("ERR: UNIMPLEMENTED GCODE");
 		return;
 	}
 
-	if (!gcode.HasWord('X') || !gcode.HasWord('Y')) {
+	if (!gcode.exists('X') || !gcode.exists('Y')) {
 		Serial.println("ERR: MISSING X OR Y COORDINATE");
 		return;
 	}
 
-	int x = round(gcode.GetWordValue('X'));
-	int y = round(gcode.GetWordValue('Y'));
+	int x = round(gcode.get('X'));
+	int y = round(gcode.get('Y'));
 
 	if (x < 0 || x > 255 || y < 0 || y > 255) {
 		Serial.println("ERR: INVALID COORDINATES");
 		return;
 	}
 
-	switch (round(gcode.GetWordValue('G'))) {
+	switch (round(gcode.get('G'))) {
 	case 0:
 		G00(x, y);
 		break;
@@ -182,6 +183,6 @@ void parse()
 	}
 
 	Serial.write("OK: ");
-	Serial.println(gcode.line);
+	Serial.println(gcode.m_buf);
 	return;
 }
