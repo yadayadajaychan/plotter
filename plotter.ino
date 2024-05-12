@@ -20,7 +20,8 @@ unsigned char CURR_X = 0;
 unsigned char CURR_Y = 0;
 // TODO use feed rate instead
 float DIST_STEP = 10;
-float ANGLE_STEP = 0.01745;
+float ANGLE_STEP = 0.001745;
+//float ANGLE_STEP = 0.01745;
 unsigned int FEED_RATE;
 
 unsigned char err = 0;
@@ -42,10 +43,9 @@ void G02(unsigned char x, unsigned char y, short i, short j);
 void G03(unsigned char x, unsigned char y, short i, short j);
 
 // helper functions
-float distance(unsigned char x1, unsigned char y1,
-               unsigned char x2, unsigned char y2);
-float angle(unsigned char x1, unsigned char y1,
-            unsigned char x2, unsigned char y2);
+float distance(int x1, int y1, int x2, int y2);
+float angle(int x1, int y1, int x2, int y2);
+
 
 void rotate(unsigned char x, unsigned char y, short i, short j, bool clockwise);
 
@@ -143,16 +143,6 @@ void rotate(unsigned char x, unsigned char y, short i, short j, bool clockwise)
 	int rx = CURR_X + i;
 	int ry = CURR_Y + j;
 
-	// check for overflow/underflow
-	if (rx < 0)
-		rx = 0;
-	else if (rx > 255)
-		rx = 255;
-	if (ry < 0)
-		ry = 0;
-	else if (ry > 255)
-		ry = 255;
-
 	float radius = distance(rx, ry, x, y);
 	float dist = distance(CURR_X, CURR_Y, x, y);
 	float ang = angle(rx, ry, CURR_X, CURR_Y);
@@ -188,19 +178,17 @@ void rotate(unsigned char x, unsigned char y, short i, short j, bool clockwise)
 	return;
 }
 
-float distance(unsigned char x1, unsigned char y1,
-               unsigned char x2, unsigned char y2)
+float distance(int x1, int y1, int x2, int y2)
 {
-	float dx = (float) x2 - x1;
-	float dy = (float) y2 - y1;
+	float dx = x2 - x1;
+	float dy = y2 - y1;
 	return sqrtf(dx*dx + dy*dy);
 }
 
-float angle(unsigned char x1, unsigned char y1,
-            unsigned char x2, unsigned char y2)
+float angle(int x1, int y1, int x2, int y2)
 {
-	float dx = (float) x2 - x1;
-	float dy = (float) y2 - y1;
+	float dx = x2 - x1;
+	float dy = y2 - y1;
 
 	if (dx == 0) {
 		if (dy == 0)
@@ -253,20 +241,10 @@ void parse()
 
 		i = round(gcode.get('I'));
 		j = round(gcode.get('J'));
-
-		int rx = CURR_X + i;
-		int ry = CURR_Y + j;
-
-		if (rx < 0 || rx > 255 || ry < 0 || ry > 255) {
-			Serial.println("ERR: INVALID I/J OFFSETS");
-			return;
-		}
 	}
 
 	switch (g_cmd) {
 	case 0:
-		G00(x, y);
-		break;
 	case 1:
 		G01(x, y);
 		break;
