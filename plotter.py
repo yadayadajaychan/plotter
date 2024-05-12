@@ -20,7 +20,7 @@ import sys
 
 def open_serial(port):
     try:
-        ser = serial.Serial(port, 9600, timeout=60)
+        ser = serial.Serial(port, 115200, timeout=60)
         return ser
     except serial.SerialException:
         print(f"Error: Could not open serial port {port}.")
@@ -61,7 +61,7 @@ def write_to_serial(port):
                 if not ser:
                     return
                 wait_until_ready(ser)
-                response = write_char(ser, ch)
+                response = write_line(ser, ch)
 
             sys.stdout.write(response.decode())
 

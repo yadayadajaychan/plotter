@@ -56,7 +56,7 @@ void setup()
 	Wire.begin();
 	Wire.setWireTimeout(5000 /*(us)*/, true);
 	G00(0, 0);
-	Serial.begin(9600);
+	Serial.begin(115200);
 	Serial.setTimeout(1000);
 	Serial.println("READY");
 }
