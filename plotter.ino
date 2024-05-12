@@ -12,9 +12,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <DS1803.h>
-#include "gcode.h"
+#include <Wire.h>
 #include <math.h>
+#include "gcode.h"
 
 unsigned char CURR_X;
 unsigned char CURR_Y;
@@ -47,7 +47,8 @@ void parse();
 
 void setup()
 {
-	initDS1803();
+	Wire.begin();
+	Wire.setWireTimeout(5000 /*(us)*/, true);
 	G00(0, 0);
 	Serial.begin(9600);
 	Serial.setTimeout(1000);
@@ -66,20 +67,24 @@ void loop()
 
 void setX(unsigned char x)
 {
-	setWiper(A_000, WIPER_1, x);
-	CURR_X = x;
+	G00(x, CURR_Y);
 }
 
 void setY(unsigned char y)
 {
-	setWiper(A_000, WIPER_0, y);
-	CURR_Y = y;
+	G00(CURR_X, y);
 }
 
 void G00(unsigned char x, unsigned char y)
 {
-	setX(x);
-	setY(y);
+	Wire.beginTransmission(0x28);
+	Wire.write(0xa9);
+	Wire.write(y); // pot-0
+	Wire.write(x); // pot-1
+	Wire.endTransmission();
+
+	CURR_X = x;
+	CURR_Y = y;
 }
 
 void G01(unsigned char x, unsigned char y)
@@ -109,6 +114,8 @@ void G01(unsigned char x, unsigned char y)
 		G00(new_x, new_y);
 		dist = distance(CURR_X, CURR_Y, x, y);
 		ang = angle(CURR_X, CURR_Y, x, y);
+
+		delay(10); //TODO calculate time delay
 	}
 
 	G00(x, y);
